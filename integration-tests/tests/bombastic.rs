@@ -4,8 +4,8 @@ use serde_json::{json, Value};
 use std::time::Duration;
 use urlencoding::encode;
 
-#[test]
-fn test_upload() {
+#[tokio::test]
+async fn test_upload() {
     with_bombastic(Duration::from_secs(60), |port| async move {
         let input = serde_json::from_str(include_str!("../../bombastic/testdata/my-sbom.json")).unwrap();
         let id = "test-upload";
@@ -17,10 +17,11 @@ fn test_upload() {
         let output: Value = response.json().await.unwrap();
         assert_eq!(input, output);
     })
+    .await
 }
 
-#[test]
-fn test_delete() {
+#[tokio::test]
+async fn test_delete() {
     with_bombastic(Duration::from_secs(60), |port| async move {
         let input = serde_json::from_str(include_str!("../../bombastic/testdata/my-sbom.json")).unwrap();
         let id = "test-delete";
@@ -34,10 +35,11 @@ fn test_delete() {
         let response = client.get(url).send().await.unwrap();
         assert_eq!(response.status(), StatusCode::NOT_FOUND);
     })
+    .await
 }
 
-#[test]
-fn test_delete_missing() {
+#[tokio::test]
+async fn test_delete_missing() {
     with_bombastic(Duration::from_secs(60), |port| async move {
         let client = reqwest::Client::new();
         let response = client
@@ -59,10 +61,11 @@ fn test_delete_missing() {
             .unwrap();
         assert_eq!(response.status(), StatusCode::NO_CONTENT);
     })
+    .await
 }
 
-#[test]
-fn test_search() {
+#[tokio::test]
+async fn test_search() {
     with_bombastic(Duration::from_secs(60), |port| async move {
         let input = serde_json::from_str(include_str!("../../bombastic/testdata/ubi9-sbom.json")).unwrap();
         upload(port, "test-search", &input).await;
@@ -87,10 +90,11 @@ fn test_search() {
         })
         .await;
     })
+    .await
 }
 
-#[test]
-fn test_invalid_type() {
+#[tokio::test]
+async fn test_invalid_type() {
     with_bombastic(Duration::from_secs(60), |port| async move {
         let response = reqwest::Client::new()
             .post(format!("http://localhost:{port}/api/v1/sbom?id=foo"))
@@ -102,10 +106,11 @@ fn test_invalid_type() {
         assert_eq!(response.status(), StatusCode::BAD_REQUEST);
         assert_eq!(response.headers().get("accept").unwrap(), &"application/json");
     })
+    .await
 }
 
-#[test]
-fn test_invalid_encoding() {
+#[tokio::test]
+async fn test_invalid_encoding() {
     with_bombastic(Duration::from_secs(60), |port| async move {
         let response = reqwest::Client::new()
             .post(format!("http://localhost:{port}/api/v1/sbom?id=foo"))
@@ -118,6 +123,7 @@ fn test_invalid_encoding() {
         assert_eq!(response.status(), StatusCode::BAD_REQUEST);
         assert_eq!(response.headers().get("accept-encoding").unwrap(), &"bzip2, zstd");
     })
+    .await
 }
 
 async fn upload(port: u16, key: &str, input: &Value) {

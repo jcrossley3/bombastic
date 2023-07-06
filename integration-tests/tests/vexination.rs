@@ -3,8 +3,8 @@ use reqwest::StatusCode;
 use serde_json::{Map, Value};
 use std::time::Duration;
 
-#[test]
-fn test_vexination() {
+#[tokio::test]
+async fn test_vexination() {
     with_vexination(Duration::from_secs(60), |port| async move {
         let client = reqwest::Client::new();
         let input =
@@ -51,4 +51,5 @@ fn test_vexination() {
         })
         .await;
     })
+    .await
 }
